@@ -2,6 +2,13 @@
 # Infra + services (images):   ./gradlew bootJar && docker compose -f infra/compose.yaml --profile apps up --build
 name: booking-platform
 
+# Readiness check for Spring services. The JRE image has no curl/wget, so use bash's /dev/tcp.
+x-spring-healthcheck: &spring-healthcheck
+  interval: 5s
+  timeout: 3s
+  retries: 20
+  start_period: 10s
+
 services:
   postgres:
     image: postgres:18
@@ -24,6 +31,9 @@ services:
     build: ../services/event-catalog-service
     ports:
       - "8081:8081"
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8081 && printf 'GET /actuator/health/readiness HTTP/1.0\r\n\r\n' >&3 && grep -q UP <&3"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -33,6 +43,9 @@ services:
     build: ../services/booking-service
     ports:
       - "8082:8082"
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8082 && printf 'GET /actuator/health/readiness HTTP/1.0\r\n\r\n' >&3 && grep -q UP <&3"]
     depends_on:
       postgres:
         condition: service_healthy
