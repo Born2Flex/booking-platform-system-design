@@ -1,0 +1,41 @@
+# Infra only (default):        docker compose -f infra/compose.yaml up -d
+# Infra + services (images):   ./gradlew bootJar && docker compose -f infra/compose.yaml --profile apps up --build
+name: booking-platform
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  event-catalog-service:
+    profiles: [apps]
+    build: ../services/event-catalog-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  booking-service:
+    profiles: [apps]
+    build: ../services/booking-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
