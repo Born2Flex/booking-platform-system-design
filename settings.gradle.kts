@@ -19,4 +19,5 @@ rootProject.name = "booking-platform"
 
 include(
     ":services:event-catalog-service",
+    ":services:booking-service",
 )
