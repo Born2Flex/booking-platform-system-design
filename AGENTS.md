@@ -34,7 +34,7 @@ Run `./gradlew build` before committing; it must pass.
   ```
   com.bookingplatform.<service>.<feature>/
     api/             REST controllers + request/response DTOs
-    domain/          business types and rules: NO Spring, NO persistence annotations
+    domain/          entities, value objects, business rules: JPA annotations allowed, NO Spring beans or web types
     application/     use cases, transactions, orchestration
     infrastructure/  repositories, messaging, HTTP clients
   ```
@@ -52,6 +52,15 @@ Run `./gradlew build` before committing; it must pass.
 - Logging via SLF4J with placeholders (`log.info("Booked {}", id)`); never `System.out`. Don't log secrets or personal data.
 - Configuration in `application.yaml`; no hard-coded URLs, ports or credentials in code.
 - Comments explain *why*, not *what*. Keep them rare.
+
+## JPA entities (they are the domain model)
+- State changes only through business methods (`event.putOnSale()`), **no setters**. Fields private.
+- Invariants are checked in constructors / factory methods and business methods, not only by the database.
+- `protected` no-arg constructor for Hibernate only. `equals`/`hashCode` based on id (constant `hashCode`).
+- All associations `LAZY`. Collections only for small, bounded children (a venue's sections, never a stadium's seats).
+- Large child sets get their own entity + repository and reference the parent by id.
+- Flyway owns the schema (`ddl-auto: validate`); every entity change comes with a migration.
+- `open-in-view` stays off: load what you need inside the transaction (fetch joins / entity graphs), never in the controller.
 
 ## Tests
 - `src/test` = **unit tests**: no Spring context, no containers, milliseconds each. Most tests live here.
