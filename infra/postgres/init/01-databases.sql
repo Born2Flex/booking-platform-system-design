@@ -5,3 +5,7 @@ CREATE DATABASE catalog OWNER catalog;
 
 CREATE USER booking WITH PASSWORD 'booking';
 CREATE DATABASE booking OWNER booking;
+
+-- Postgres grants CONNECT to PUBLIC (every user) by default. Only the owner may connect.
+REVOKE CONNECT ON DATABASE catalog FROM PUBLIC;
+REVOKE CONNECT ON DATABASE booking FROM PUBLIC;
