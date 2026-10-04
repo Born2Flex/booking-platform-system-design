@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
@@ -33,9 +32,6 @@ class VenuePersistenceTest {
 
     @Autowired
     EntityManager entityManager;
-
-    @Autowired
-    JdbcClient jdbc;
 
     @Test
     void savesVenueWithSectionsAndReadsItBack() {
@@ -53,8 +49,6 @@ class VenuePersistenceTest {
                 .containsExactlyInAnyOrder(
                         tuple("A", SectionKind.SEATED, null),
                         tuple("Pit", SectionKind.STANDING, 5_000));
-        // Only the standing section got a row in standing_area.
-        assertThat(jdbc.sql("select count(*) from standing_area").query(Long.class).single()).isEqualTo(1);
     }
 
     @Test

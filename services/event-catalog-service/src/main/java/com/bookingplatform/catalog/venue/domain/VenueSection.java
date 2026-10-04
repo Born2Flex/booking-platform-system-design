@@ -1,6 +1,5 @@
 package com.bookingplatform.catalog.venue.domain;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -10,17 +9,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.SecondaryTable;
 import java.util.Optional;
 
 /**
  * A section of a venue: SEATED (has numbered seats) or STANDING (has a capacity).
- * The capacity lives in the standing_area table, mapped as a secondary table:
- * Hibernate writes that row only when capacity is non-null, so only for STANDING sections.
+ * The database enforces that capacity is present if and only if the section is STANDING.
  */
 @Entity
-@SecondaryTable(name = "standing_area", pkJoinColumns = @PrimaryKeyJoinColumn(name = "section_id"))
 public class VenueSection {
 
     @Id
@@ -36,7 +31,6 @@ public class VenueSection {
     @Enumerated(EnumType.STRING)
     private SectionKind kind;
 
-    @Column(table = "standing_area")
     private Integer capacity;
 
     protected VenueSection() {

@@ -39,7 +39,7 @@ class SchemaConstraintsTest {
 
     @Test
     void rejectsSeatInStandingSection() {
-        var pitId = insertSection("Pit", "STANDING");
+        var pitId = insertSection("Pit", "STANDING", 5_000);
 
         assertThatThrownBy(() -> jdbc.sql("insert into venue_seat (section_id, row_label, seat_number) values (?, '1', 1)")
                 .param(pitId).update())
@@ -69,9 +69,25 @@ class SchemaConstraintsTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void rejectsStandingSectionWithoutCapacity() {
+        assertThatThrownBy(() -> insertSection("Pit", "STANDING", null))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void rejectsSeatedSectionWithCapacity() {
+        assertThatThrownBy(() -> insertSection("A", "SEATED", 100))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
     private long insertSection(String name, String kind) {
-        return jdbc.sql("insert into venue_section (venue_id, name, kind) values (?, ?, ?) returning id")
-                .params(venueId, name, kind).query(Long.class).single();
+        return insertSection(name, kind, null);
+    }
+
+    private long insertSection(String name, String kind, Integer capacity) {
+        return jdbc.sql("insert into venue_section (venue_id, name, kind, capacity) values (?, ?, ?, ?) returning id")
+                .params(venueId, name, kind, capacity).query(Long.class).single();
     }
 
     private long insertEvent(String title) {
