@@ -12,6 +12,9 @@ two people must never get the same seat. Expect locking and idempotency (Stage 3
 | API | none yet: only `/actuator/health` |
 
 ## Rules
+- Booking owns **seat availability per event** (free / held / sold). Seat and event definitions come from catalog.
+- A booking stores a **snapshot** of what was bought (seat label, price, currency) at booking time, never just
+  a reference to catalog data that may change later.
 - Never trust seat data sent by the client; check it against the catalog.
 - Every state-changing endpoint must be safe to retry (idempotency key) once the API exists.
 - Booking states are a sealed type; every state transition is explicit and tested.

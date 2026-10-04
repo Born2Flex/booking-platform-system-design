@@ -12,4 +12,6 @@ few people change the catalog. Expect caching (Stage 2) and search/read models (
 | API | none yet: only `/actuator/health` |
 
 ## Rules
+- Catalog owns **definitions**: venues and their physical seats, events, which seats are offered for an
+  event and at what price tier. It does **not** know whether a seat is held or sold: that's booking-service.
 - List endpoints are always paginated.
