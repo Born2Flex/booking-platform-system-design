@@ -4,6 +4,14 @@ spring:
   threads:
     virtual:
       enabled: true   # Java 25 virtual threads for request handling
+  datasource:
+    url: jdbc:postgresql://localhost:5432/catalog
+    username: catalog
+    password: catalog   # local dev only; real environments inject SPRING_DATASOURCE_PASSWORD
+  jpa:
+    open-in-view: false   # no lazy loading during view rendering: DB access stays inside the service layer
+    hibernate:
+      ddl-auto: validate  # Flyway owns the schema; Hibernate only checks that entities match it
 
 server:
   port: 8081

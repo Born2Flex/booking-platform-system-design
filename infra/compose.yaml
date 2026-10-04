@@ -29,6 +29,8 @@ services:
   event-catalog-service:
     profiles: [apps]
     build: ../services/event-catalog-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/catalog   # inside the compose network, the host is the service name
     ports:
       - "8081:8081"
     healthcheck:
