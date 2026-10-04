@@ -14,6 +14,7 @@ Java 25 · Spring Boot 4.1 · Gradle 9 (Kotlin DSL) · Docker Compose.
 | `infra/` | `compose.yaml`, Postgres init, later observability configs and k8s manifests |
 | `load-tests/` | k6 scripts |
 | `docs/` | `ROADMAP.md`, ADRs, per-stage notes |
+| `AGENTS.md` | Code, test and architecture rules (root + per service). `CLAUDE.md` files point to them |
 
 | Service | Port |
 |---------|------|
