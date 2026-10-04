@@ -1,6 +1,6 @@
 # Stage 1: Catalog with a real database
 
-Status: designing the schema. Implementation not started.
+Status: schema in place (Flyway V1, V2); venue entities done; event entities next.
 
 ## Decisions so far
 
@@ -24,9 +24,14 @@ Lookup: override if present, else section tier. Cheap to set up, still flexible.
 `starts_at timestamptz` is derived for sorting and range queries, and recalculated if timezone rules change.
 Past facts (`booked_at`, `paid_at`) are plain `timestamptz`.
 
-### Seated vs standing: separate tables
-`venue_seat` (row, number) and `standing_area` (capacity), so every column is NOT NULL with real constraints.
-Cost: "all inventory of an event" needs two queries or a UNION.
+### Seated vs standing
+Seats are their own table, `venue_seat` (row, number): a stadium has tens of thousands.
+Standing capacity is a nullable column on `venue_section`, guarded by
+`CHECK ((kind = 'STANDING') = (capacity is not null and capacity > 0))`.
+
+*Revised in V2.* V1 had a separate `standing_area` table so every column could be NOT NULL. For a single
+column that cost a join and a `@SecondaryTable` mapping for no extra safety, so V2 moved it back with the CHECK.
+Revisit if standing areas grow several attributes of their own (zones, gates).
 
 ### Layout per venue, events subtract from it ("seat kills")
 Physical layout is defined once per venue. Per event: a section without a `section_tier` row isn't on sale;
@@ -36,9 +41,8 @@ Alternative not taken (yet): named venue configurations, worth it only if many e
 ## Draft schema
 ```
 venue               (id, name, city, timezone)
-venue_section       (id, venue_id, name, kind)          kind: SEATED | STANDING
+venue_section       (id, venue_id, name, kind, capacity)   kind: SEATED | STANDING; capacity only for STANDING
 venue_seat          (id, section_id, row_label, seat_number)
-standing_area       (section_id, capacity)
 
 event               (id, venue_id, title, starts_at_local, starts_at, status)   status: DRAFT | ON_SALE | CANCELLED
 price_tier          (id, event_id, name, price, currency)
