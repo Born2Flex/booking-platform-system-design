@@ -16,17 +16,25 @@
 4. Why image layer order matters: what gets re-pulled when one line of service code changes?
 5. Database-per-service on one Postgres instance: what isolation do we get, and what don't we get?
 
-## Exercise: measure the build (fill in your numbers)
-| Scenario | Command | Time | Tasks executed |
+## Exercise: measure the build (results 2026-10-04, laptop, Gradle 9.8)
+| Scenario | Command | Time | Tasks |
 |---|---|---|---|
-| Clean build | `./gradlew clean build` | | |
-| No-op rebuild | `./gradlew build` | | |
-| One-line change in booking-service | edit a class, `./gradlew build` | | |
-| Clean, but with build cache | `./gradlew clean build` again | | |
-| Build one service | `./gradlew :services:booking-service:build` | | |
+| Clean build, cold daemon, no cache | `./gradlew clean build --no-build-cache` | 24.5 s | 14 executed |
+| No-op rebuild | `./gradlew build` | 2.1 s | 12 up-to-date |
+| One-line change in booking-service | edit a class, `./gradlew build` | 14.1 s | 4 executed, 8 up-to-date |
+| Clean build, cache filled | `./gradlew clean build` | 2.2 s | 6 from cache (incl. integration tests) |
+| One service, forced | `./gradlew :services:booking-service:build --rerun-tasks` | 13.5 s | 6 executed |
 
-Add `--scan` to any of them to see where the time goes.
-**Question:** in the "clean, with build cache" run, which tasks were FROM-CACHE and which still executed? Why?
+What the numbers say:
+- **No-op = 2 s** is pure Gradle overhead; the configuration cache skips re-reading the build scripts.
+- **One-line change**: catalog was entirely UP-TO-DATE. Only booking's compile, bootJar and integration
+  test re-ran, and most of those 14 s is Spring starting inside the integration test.
+  Even a comment counts: it shifts line numbers, which are stored in the .class file, so the bytes change.
+- **Clean + cache**: `clean` deleted build/, yet compile *and integration tests* came FROM-CACHE: same inputs,
+  so Gradle restored the stored outputs (including test results) instead of re-running them.
+  `bootJar` and `processResources` always re-run: they're cheap file copies, so caching them isn't worth it.
+- The expensive thing in this build is **starting Spring in tests**, not compiling. That's what we'll
+  protect as the project grows (more unit tests, fewer full-context tests, Testcontainers reuse).
 
 ## How to break it
 - Make `booking-service` depend on `event-catalog-service` in Gradle. What goes wrong architecturally?
