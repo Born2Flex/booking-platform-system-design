@@ -17,6 +17,11 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("-parameters", "-Xlint:all,-processing,-serial"))
 }
 
+// Servers run in UTC, independent of the developer's machine. (A Windows default of the legacy
+// "Europe/Kiev" zone id is rejected by Postgres 18 when the JDBC driver sends it on connect.)
+tasks.withType<Test>().configureEach { systemProperty("user.timezone", "UTC") }
+tasks.withType<JavaExec>().configureEach { systemProperty("user.timezone", "UTC") }
+
 // Fast unit tests in src/test, slower Spring/Testcontainers tests in src/integrationTest.
 //   ./gradlew test             -> inner loop
 //   ./gradlew integrationTest  -> before push / CI
